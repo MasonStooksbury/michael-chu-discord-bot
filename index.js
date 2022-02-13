@@ -124,7 +124,7 @@ roletroll.start();
 
 
 const AntiSpam = require('discord-anti-spam');
-const antiSpam = new AntiSpam({
+let antiSpam = new AntiSpam({
 	// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
 	muteThreshold: 3, // Amount of messages sent in a row that will cause a mute
 	maxInterval: 60000, // Amount of time (in milliseconds) in which messages are considered spam.
@@ -225,48 +225,41 @@ client.on('messageCreate', msg => {
 	// modify-antispam
 	// Only Admins can do this
 	else if (msg.content.startsWith(prefix + 'modify-antispam') && msg.member.roles.cache.some(role => role.name === admin_rn)) {
-		let pieces_string = msg.content.slice(prefix.length + 'modify-antispam '.length);
+		let pieces_string = msg.content.slice(prefix.length + 'modify-antispam '.length).split(' ');
+		command = pieces_string[0];
+		value = pieces_string[1];
+		console.log(command);
+		console.log(value);
 
-		// antiSpam = new AntiSpam({
-		// 	// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
-		// 	warnThreshold: 10, // Amount of messages sent in a row that will cause a warning.
-		// 	kickThreshold: 10, // Amount of messages sent in a row that will cause a kick.
-		// 	muteThreshold: 3, // Amount of messages sent in a row that will cause a mute
-		// 	banThreshold: 10, // Amount of messages sent in a row that will cause a ban.
-		// 	maxInterval: 60000, // Amount of time (in milliseconds) in which messages are considered spam.
-		// 	maxDuplicatesInterval: 60000, // Amount of time (ms) in which duplicate messages are considered spam.
-		// 	maxDuplicatesWarn: 5, // Amount of duplicate messages that trigger a warning.
-		// 	maxDuplicatesKick: 5, // Amount of duplicate messages that trigger a warning.
-		// 	maxDuplicatesMute: 2, // Amount of duplicate message that trigger a mute.
-		// 	maxDuplicatesBan: 5, // Amount of duplicate messages that trigger a warning.
-		// 	muteRoleName: "Muted", // Name of the role that will be given to muted users!
-		// 	modLogsChannelName: '', // Name or ID of the channel in which moderation logs will be sent.
-		// 	modLogsEnabled: '', // Whether moderation logs are enabled.
-		// 	warnMessage: '{@user}, Please stop spamming.', // Message that will be sent in chat upon warning a user.
-		// 	kickMessage: '**{user_tag}** has been kicked for spamming.', // Message that will be sent in chat upon kicking a user.
-		// 	muteMessage: '**{user_tag}** has been muted for spamming.',// Message that will be sent in chat upon muting a user.
-		// 	banMessage: '**{user_tag}** has been banned for spamming.', // Message that will be sent in chat upon banning a user.
-		// 	errorMessages: true, // Whether the bot should send a message in the channel when it doesn't have some required permissions, like it can't kick members.
-		// 	kickErrorMessage: false, // Message that will be sent in the channel when the bot doesn't have enough permissions to kick the member.
-		// 	muteErrorMessage: true, // Message that will be sent in the channel when the bot doesn't have enough permissions to mute the member (to add the mute role).
-		// 	banErrorMessage: false, // Message that will be sent in the channel when the bot doesn't have enough permissions to ban the member.
-		// 	ignoredMembers: [], // Array of member IDs that are ignored.
-		// 	ignoredRoles: '', // Array of role IDs or role names that are ignored. Members with one of these roles will be ignored.
-		// 	ignoredGuilds: '', // Array of guild IDs or guild names that are ignored.
-		// 	ignoredChannels: '', // Array of channel IDs or channel names that are ignored.
-		// 	ignoredPermissions: [ 'Admin' ], // TODO: Ask Lewis what to set this to // Bypass users with any of these permissions.
-		// 	ignoreBots: true, // Whether bots should be ignored.
-		// 	warnEnabled: false, // Whether warn sanction is enabled.
-		// 	kickEnabled: false, // Whether kick sanction is enabled.
-		// 	muteEnabled: true, // Whether mute sanction is enabled.
-		// 	banEnabled: false, // Whether ban sanction is enabled.
-		// 	deleteMessagesAfterBanForPastDays: '', // TODO: Ask Lewis what to set this to // When a user is banned, their messages sent in the last x days will be deleted.
-		// 	verbose: true, // Extended logs from module (recommended).
-		// 	debug: true, // Whether to run the module in debug mode.
-		// 	removeMessages: true, // If the bot should remove all the spam messages when taking action on a user!
-		// 	removeBotMessages: '', // Whether to delete bot messages after an time.
-		// 	removeBotMessagesAfter: '' // Whenever to delete bot messages. IN MILLISECONDS
-		// });
+		antiSpam = new AntiSpam({
+			// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
+			muteThreshold: 3, // Amount of messages sent in a row that will cause a mute
+			maxInterval: 60000, // Amount of time (in milliseconds) in which messages are considered spam.
+			maxDuplicatesInterval: 60000, // Amount of time (ms) in which duplicate messages are considered spam.
+			maxDuplicatesWarn: 5, // Amount of duplicate messages that trigger a warning.
+			maxDuplicatesKick: 5, // Amount of duplicate messages that trigger a warning.
+			maxDuplicatesMute: 2, // Ammount of duplicate message that trigger a mute.
+			maxDuplicatesBan: 5, // Amount of duplicate messages that trigger a warning.
+			unMuteTime: parseInt(value), // Time in minutes to wait until unmuting a user.
+			modLogsChannelName: '', // Name or ID of the channel in which moderation logs will be sent.
+			modLogsEnabled: '', // Whether moderation logs are enabled.
+			muteMessage: '**{user_tag}** has been muted for spamming.',// Message that will be sent in chat upon muting a user.
+			errorMessages: true, // Whether the bot should send a message in the channel when it doesn't have some required permissions, like it can't kick members.
+			muteErrorMessage: true, // Message that will be sent in the channel when the bot doesn't have enough permissions to mute the member (to add the mute role).
+			ignoredMembers: [], // Array of member IDs that are ignored.
+			ignoredRoles: '', // Array of role IDs or role names that are ignored. Members with one of these roles will be ignored.
+			ignoredGuilds: '', // Array of guild IDs or guild names that are ignored.
+			ignoredChannels: '', // Array of channel IDs or channel names that are ignored.
+			ignoredPermissions: [], // Bypass users with any of these permissions.
+			ignoreBots: true, // Whether bots should be ignored.
+			warnEnabled: false, // Whether warn sanction is enabled.
+			kickEnabled: false, // Whether kick sanction is enabled.
+			muteEnabled: true, // Whether mute sanction is enabled.
+			banEnabled: false, // Whether ban sanction is enabled.
+			verbose: true, // Extended logs from module (recommended).
+			debug: true, // Whether to run the module in debug mode.
+			removeMessages: true, // If the bot should remove all the spam messages when taking action on a user!
+		});
 	}
 
 	// roletroll commands
