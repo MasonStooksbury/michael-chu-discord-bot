@@ -2,12 +2,7 @@ require('dotenv').config();
 const { Client, Intents } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
-
-const TOKEN = process.env.TOKEN;
-const prefix = process.env.PREFIX;
-const server_id = process.env.SERVER_ID;
-const mute_rn = process.env.MUTE_RN;
-const admin_rn = process.env.ADMIN_RN;
+// Invite Link (Admin permission): https://discord.com/api/oauth2/authorize?client_id=941547226986070057&permissions=8&scope=bot
 
 // Dependencies
 const fs = require('fs');
@@ -17,7 +12,6 @@ const AntiSpam = require('discord-anti-spam');
 // Files
 const timeout_txt = './timeout.txt';
 
-// Invite Link
 
 
 client.login(TOKEN);
@@ -29,8 +23,63 @@ client.on('ready', () => {
 
 
 
+
+
+// #####################################################################
+// ################ FUNCTIONS and GLOBAL VARIABLES #####################
+// #####################################################################
+
+const TOKEN = process.env.TOKEN;
+const prefix = process.env.PREFIX;
+const server_id = process.env.SERVER_ID;
+const mute_rn = process.env.MUTE_RN;
+const admin_rn = process.env.ADMIN_RN;
+let minimum_message_length = parseInt(process.env.MIN_MESSAGE_LENGTH);
+
+// Message a specific user. Mainly used in the Major Events logs
+function modifyAntispam(attribute=false, value=false) {
+	antispam_object = {
+		// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
+		muteThreshold: 3, // Amount of messages sent in a row that will cause a mute
+		maxInterval: 60000, // Amount of time (in milliseconds) in which messages are considered spam.
+		maxDuplicatesInterval: 60000, // Amount of time (ms) in which duplicate messages are considered spam.
+		maxDuplicatesWarn: 5, // Amount of duplicate messages that trigger a warning.
+		maxDuplicatesKick: 5, // Amount of duplicate messages that trigger a warning.
+		maxDuplicatesMute: 2, // Ammount of duplicate message that trigger a mute.
+		maxDuplicatesBan: 5, // Amount of duplicate messages that trigger a warning.
+		unMuteTime: 2, // Time in minutes to wait until unmuting a user.
+		modLogsChannelName: '', // Name or ID of the channel in which moderation logs will be sent.
+		modLogsEnabled: '', // Whether moderation logs are enabled.
+		muteMessage: '**{user_tag}** has been muted for spamming.',// Message that will be sent in chat upon muting a user.
+		errorMessages: true, // Whether the bot should send a message in the channel when it doesn't have some required permissions, like it can't kick members.
+		muteErrorMessage: true, // Message that will be sent in the channel when the bot doesn't have enough permissions to mute the member (to add the mute role).
+		ignoredMembers: [], // Array of member IDs that are ignored.
+		ignoredRoles: '', // Array of role IDs or role names that are ignored. Members with one of these roles will be ignored.
+		ignoredGuilds: '', // Array of guild IDs or guild names that are ignored.
+		ignoredChannels: '', // Array of channel IDs or channel names that are ignored.
+		ignoredPermissions: [], // Bypass users with any of these permissions.
+		ignoreBots: true, // Whether bots should be ignored.
+		warnEnabled: false, // Whether warn sanction is enabled.
+		kickEnabled: false, // Whether kick sanction is enabled.
+		muteEnabled: true, // Whether mute sanction is enabled.
+		banEnabled: false, // Whether ban sanction is enabled.
+		verbose: true, // Extended logs from module (recommended).
+		debug: true, // Whether to run the module in debug mode.
+		removeMessages: true, // If the bot should remove all the spam messages when taking action on a user!
+	}
+
+	if (attribute !== false && value !== false) {
+		for (const k in antispam_object) {
+			if (k == attribute) {
+				antispam_object[k] = value;
+			}
+		}
+	}
+	return new AntiSpam(antispam_object);
+}
+
 // Setup the roletroll cron job to run: 00 * * * * *
-// This runs every minute of every day of the month of every month for every day of the week
+// This runs every minute of every day of every day in the week of every week of every month of the year
 let roletroll = new cron.CronJob('00 * * * * *', () => {
 	// Check our ban list
 	fs.readFile(timeout_txt, 'utf8', function(err, data) {
@@ -119,67 +168,33 @@ let roletroll = new cron.CronJob('00 * * * * *', () => {
 	});
 });
 
-// Start up the roletroll by default (you can stop it with the subsequent command at the bottom)
+// Start up the roletroll by default (you can stop it/restart it with the subsequent command at the bottom)
 roletroll.start();
 
-
-// Message a specific user. Mainly used in the Major Events logs
-function modifyAntispam(attribute=false, value=false) {
-	antispam_object = {
-		// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
-		muteThreshold: 3, // Amount of messages sent in a row that will cause a mute
-		maxInterval: 60000, // Amount of time (in milliseconds) in which messages are considered spam.
-		maxDuplicatesInterval: 60000, // Amount of time (ms) in which duplicate messages are considered spam.
-		maxDuplicatesWarn: 5, // Amount of duplicate messages that trigger a warning.
-		maxDuplicatesKick: 5, // Amount of duplicate messages that trigger a warning.
-		maxDuplicatesMute: 2, // Ammount of duplicate message that trigger a mute.
-		maxDuplicatesBan: 5, // Amount of duplicate messages that trigger a warning.
-		unMuteTime: 2, // Time in minutes to wait until unmuting a user.
-		modLogsChannelName: '', // Name or ID of the channel in which moderation logs will be sent.
-		modLogsEnabled: '', // Whether moderation logs are enabled.
-		muteMessage: '**{user_tag}** has been muted for spamming.',// Message that will be sent in chat upon muting a user.
-		errorMessages: true, // Whether the bot should send a message in the channel when it doesn't have some required permissions, like it can't kick members.
-		muteErrorMessage: true, // Message that will be sent in the channel when the bot doesn't have enough permissions to mute the member (to add the mute role).
-		ignoredMembers: [], // Array of member IDs that are ignored.
-		ignoredRoles: '', // Array of role IDs or role names that are ignored. Members with one of these roles will be ignored.
-		ignoredGuilds: '', // Array of guild IDs or guild names that are ignored.
-		ignoredChannels: '', // Array of channel IDs or channel names that are ignored.
-		ignoredPermissions: [], // Bypass users with any of these permissions.
-		ignoreBots: true, // Whether bots should be ignored.
-		warnEnabled: false, // Whether warn sanction is enabled.
-		kickEnabled: false, // Whether kick sanction is enabled.
-		muteEnabled: true, // Whether mute sanction is enabled.
-		banEnabled: false, // Whether ban sanction is enabled.
-		verbose: true, // Extended logs from module (recommended).
-		debug: true, // Whether to run the module in debug mode.
-		removeMessages: true, // If the bot should remove all the spam messages when taking action on a user!
-	}
-
-	if (attribute !== false && value !== false) {
-		for (const k in antispam_object) {
-			if (k == attribute) {
-				antispam_object[k] = value;
-			}
-		}
-	}
-	return new AntiSpam(antispam_object);
-}
+// Set the antispam variable here (so we can change it later if needed)
+let antispam = modifyAntispam();
 
 
-let antiSpam = modifyAntispam();
 
+
+
+// #####################################################################
+// ########################## MAIN CODE ################################
+// #####################################################################
 
 // When the bot detects that the message has been sent
 client.on('messageCreate', msg => {
 	// Run this thru the anti-spam filter first
-	antiSpam.message(msg);
-	console.log('here');
+	antispam.message(msg);
+	
+	// Is the user who sent this message an Admin?
+	const isAdmin = msg.member.roles.cache.some(role => role.name === admin_rn);
 
 	// Initialize the guild variable so that we can get helpful information later
 	const guild = client.guilds.cache.get(server_id);
 
 	// If a user sends a message that is 10 characters or less, mute them for 10 minutes
-	if (msg.content.length <= 10) {
+	if (msg.content.length <= minimum_message_length) {
 		// First, assign them the mute role if they don't already have it
 		if (!msg.member.roles.cache.some(role => role.name === mute_rn)) {
 			// Grab the actual role object
@@ -210,51 +225,28 @@ client.on('messageCreate', msg => {
 		stream.write(`${msg.author.id} ${date_thing} ${date.toLocaleTimeString()}\n`);
 	}
 
-	// If this isn't a command, or the user is a bot, or this is a DM: leave
+	// If this message isn't a command, or the user is a bot, or this is a DM: leave
 	if (!msg.content.startsWith(prefix) || msg.author.bot || msg.channel.type == 'dm') return;
-
-	// whitelist-user
-	// Only Admins can do this
-	if (msg.content.startsWith(prefix + 'whitelist-user') && msg.member.roles.cache.some(role => role.name === admin_rn)) {
-		// Grab whoever is mentioned in the command
-		const person = msg.mentions.members.first();
-
-		// If they are already whitelisted, let the user know
-		if (msg.member.roles.cache.some(role => role.name === whitelist_rn)) {
-			msg.channel.send(`<@${person.user.id}> is already whitelisted.`);
-		}
-		// Else, whitelist them
-		else {
-			// Grab the actual role object
-			var role = guild.roles.cache.find(role => role.name === whitelist_rn);
-			// Assign the role object to our person
-			msg.member.roles.add(role);
-			msg.channel.send(`<@${person.user.id}> has been successfully whitelisted!`);
-		}
-		sleep().then(() => {
-			msg.delete();
-		});
-	}
 
 	// modify-antispam
 	// Only Admins can do this
-	else if (msg.content.startsWith(prefix + 'modify-antispam') && msg.member.roles.cache.some(role => role.name === admin_rn)) {
+	else if (msg.content.startsWith(prefix + 'modify-antispam') && isAdmin) {
+		// Rip off the command from the message contents and split the remaining pieces by a space
 		let pieces_string = msg.content.slice(prefix.length + 'modify-antispam '.length).split(' ');
 		
+		// We should have two things: an attribute to modify, and the value to change it to. If we don't have that, tell the user they need to provide it
 		if (pieces_string.length !== 2) {
 			return msg.reply('Please make sure to list the attribute you wish to change and the value to change it to (e.g. modify-antispam unMuteTime 3')
 		}
 
-		antiSpam = modifyAntispam(pieces_string[0], pieces_string[1]);
+		// Set the antispam variable to the modified Antispam object
+		antispam = modifyAntispam(pieces_string[0], pieces_string[1]);
 	}
 
 	// roletroll commands
-	else if (msg.content.startsWith(prefix + 'roletroll') && member.roles.cache.some(role => role.name === admin_rn)) {
-		if (msg.content.slice(prefix.length + 'roletroll '.length) === 'start') {
-			roletroll.start();
-		} else {
-			roletroll.stop();
-		}
+	// Only Admins can do this
+	else if (msg.content.startsWith(prefix + 'roletroll') && isAdmin) {
+		msg.content.slice(prefix.length + 'roletroll '.length) === 'start' ? roletroll.start() : roletroll.stop();
 	}
 });
 
@@ -262,14 +254,12 @@ client.on('messageCreate', msg => {
 
 
 
-//###############
-// NOTES
-//###############
-
-// Invite Link: https://discord.com/api/oauth2/authorize?client_id=941547226986070057&permissions=8&scope=bot
+// #####################################################################
+// ############################# NOTES #################################
+// #####################################################################
 
 // TODOS
 // Reset index.js for discord-anti-spam
 
-// Installs
+// Dependencies
 // discordjs cron dotenv discord-anti-spam
