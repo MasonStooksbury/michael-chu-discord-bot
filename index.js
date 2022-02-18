@@ -69,7 +69,11 @@ client.on('ready', () => {
 				name: 'action',
 				description: 'Whether or not you want to start or stop the Cron job',
 				required: true,
-				type: 3 // STRING
+				type: 3, // STRING
+				choices: [
+					{name: 'Start', value: 'start'},
+					{name: 'Stop', value: 'stop'}
+				]
 			}
 		]
 	});
@@ -85,24 +89,54 @@ client.on('ready', () => {
 				required: true,
 				type: 3, // STRING
 				choices: [
-					{ name: "muteThreshold", value: "muteThreshold"},
-					{ name: "maxInterval", value: "maxInterval"},
-					{ name: "maxDuplicatesInterval", value: "maxDuplicatesInterval"},
-					{ name: "maxDuplicatesMute", value: "maxDuplicatesMute"},
-					{ name: "unMuteTime", value: "unMuteTime"},
-					{ name: "modLogsChannelName", value: "modLogsChannelName"},
-					{ name: "modLogsEnabled", value: "modLogsEnabled"},
-					{ name: "muteMessage", value: "muteMessage"},
-					{ name: "errorMessages", value: "errorMessages"},
-					{ name: "muteErrorMessage", value: "muteErrorMessage"},
-					{ name: "ignoredMembers", value: "ignoredMembers"},
-					{ name: "ignoredRoles", value: "ignoredRoles"},
-					{ name: "ignoredGuilds", value: "ignoredGuilds"},
-					{ name: "ignoredChannels", value: "ignoredChannels"},
-					{ name: "ignoredPermissions", value: "ignoredPermissions"},
-					{ name: "muteEnabled", value: "muteEnabled"},
-					{ name: "removeMessages", value: "removeMessages"},
-				] 
+					{name: 'warnThreshold', value: 'warnThreshold'},
+					{name: 'muteThreshold', value: 'muteThreshold'},
+					{name: 'kickThreshold', value: 'kickThreshold'},
+					{name: 'banThreshold', value: 'banThreshold'},
+					{name: 'maxInterval', value: 'maxInterval'},
+					{name: 'maxDuplicatesInterval', value: 'maxDuplicatesInterval'},
+					{name: 'maxDuplicatesWarn', value: 'maxDuplicatesWarn'},
+					{name: 'maxDuplicatesKick', value: 'maxDuplicatesKick'},
+					{name: 'maxDuplicatesMute', value: 'maxDuplicatesMute'},
+					{name: 'maxDuplicatesBan', value: 'maxDuplicatesBan'},
+					{name: 'unMuteTime', value: 'unMuteTime'},
+					{name: 'modLogsChannelName', value: 'modLogsChannelName'},
+					{name: 'modLogsEnabled', value: 'modLogsEnabled'},
+					{name: 'modLogsMode', value: 'modLogsMode'},
+					{name: 'warnMessage', value: 'warnMessage'},
+					{name: 'kickMessage', value: 'kickMessage'},
+					{name: 'muteMessage', value: 'muteMessage'},
+					{name: 'banMessage', value: 'banMessage'},
+					{name: 'errorMessages', value: 'errorMessages'},
+					{name: 'kickErrorMessage', value: 'kickErrorMessage'},
+					{name: 'banErrorMessage', value: 'banErrorMessage'},
+					{name: 'muteErrorMessage', value: 'muteErrorMessage'},
+					{name: 'ignoredMembers', value: 'ignoredMembers'},
+					{name: 'ignoredRoles', value: 'ignoredRoles'},
+					{name: 'more...', value: 'more'}
+				]
+			},
+			{
+				name: 'attribute-continued',
+				description: 'What part of the antispam object to modify',
+				required: true,
+				type: 3, // STRING
+				choices: [
+					{name: 'Not needed', value: 'not_needed'},
+					{name: 'ignoredGuilds', value: 'ignoredGuilds'},
+					{name: 'ignoredChannels', value: 'ignoredChannels'},
+					{name: 'ignoredPermissions', value: 'ignoredPermissions'},
+					{name: 'ignoreBots', value: 'ignoreBots'},
+					{name: 'warnEnabled', value: 'warnEnabled'},
+					{name: 'kickEnabled', value: 'kickEnabled'},
+					{name: 'muteEnabled', value: 'muteEnabled'},
+					{name: 'banEnabled', value: 'banEnabled'},
+					{name: 'deleteMessagesAfterBanForPastDays', value: 'deleteMessagesAfterBanForPastDays'},
+					{name: 'verbose', value: 'verbose'},
+					{name: 'debug', value: 'debug'},
+					{name: 'removeMessages', value: 'removeMessages'},
+					{name: 'MultipleSanctions', value: 'MultipleSanctions'}
+				]
 			},
 			{
 				name: 'value',
@@ -117,7 +151,7 @@ client.on('ready', () => {
 
 
 // Message a specific user. Mainly used in the Major Events logs
-function modifyAntispam(attribute=false, value=false) {
+function modifyAntispam(attribute='~~~', value='~~~') {
 	antispam_object = {
 		// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
 		warnThreshold: 3, // Amount of messages sent in a row that will cause a warning.
@@ -159,18 +193,19 @@ function modifyAntispam(attribute=false, value=false) {
 		MultipleSanctions: false, // Whether to run sanctions multiple times
 	}
 
-	if (attribute !== false && value !== false) {
+	if (attribute !== '~~~' && value !== '~~~') {
 		for (const k in antispam_object) {
 			if (k == attribute) {
 				antispam_object[k] = value;
 			}
 		}
 	}
+
 	return new AntiSpam(antispam_object);
 }
 
 function reformatAttributeValue(attribute, value) {
-	let formatted_value;
+	let formatted_value = attribute;
 	switch (attribute) {
 		// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
 		case 'warnThreshold':
@@ -186,12 +221,14 @@ function reformatAttributeValue(attribute, value) {
 		case 'unMuteTime':
 		case 'deleteMessagesAfterBanForPastDays':
 			formatted_value = parseInt(value);
+			break;
 		case 'ignoredMembers':
 		case 'ignoredRoles':
 		case 'ignoredGuilds':
 		case 'ignoredChannels':
 		case 'ignoredPermissions':
-			formatted_value = [value.split(',')]
+			formatted_value = [value.split(',')];
+			break;
 		case 'modLogsEnabled':
 		case 'errorMessages':
 		case 'ignoreBots':
@@ -204,14 +241,15 @@ function reformatAttributeValue(attribute, value) {
 		case 'removeMessages':
 		case 'MultipleSanctions':
 			formatted_value = value === 'true' ? true : false;
+			break;
 	}
+	console.log(`formatted: ${formatted_value}`);
 	return formatted_value
 }
 
 // Setup the roletroll cron job to run: 00 * * * * *
 // This runs every minute of every day of every day in the week of every week of every month of the year
 let roletroll = new cron.CronJob('00 * * * * *', () => {
-	console.log('reeee');
 	// Check our ban list
 	fs.readFile(timeout_txt, 'utf8', function(err, data) {
 		// If we find any problems, explode
@@ -325,7 +363,7 @@ client.on('messageCreate', msg => {
 	const guild = client.guilds.cache.get(server_id);
 
 	// If a user sends a message that is 10 characters or less, mute them for 10 minutes
-	if (msg.content.length <= minimum_message_length) {
+	if (msg.content.length <= minimum_message_length && !isAdmin) {
 		// First, assign them the mute role if they don't already have it
 		if (!msg.member.roles.cache.some(role => role.name === mute_rn)) {
 			// Grab the actual role object
@@ -356,23 +394,9 @@ client.on('messageCreate', msg => {
 		stream.write(`${msg.author.id} ${date_thing} ${date.toLocaleTimeString()}\n`);
 	}
 
+	// ENABLE THIS IF YOU ADD CUSTOM COMMANDS
 	// If this message isn't a command, or the user is a bot, or this is a DM: leave
-	if (!msg.content.startsWith(prefix) || msg.author.bot || msg.channel.type == 'dm') return;
-
-	// modify-antispam
-	// Only Admins can do this
-	else if (msg.content.startsWith(prefix + 'modify-antispam') && isAdmin) {
-		// Rip off the command from the message contents and split the remaining pieces by a space
-		let pieces_string = msg.content.slice(prefix.length + 'modify-antispam '.length).split(' ');
-		
-		// We should have two things: an attribute to modify, and the value to change it to. If we don't have that, tell the user they need to provide it
-		if (pieces_string.length !== 2) {
-			return msg.reply('Please make sure to list the attribute you wish to change and the value to change it to (e.g. modify-antispam unMuteTime 3')
-		}
-
-		// Set the antispam variable to the modified Antispam object
-		antispam = modifyAntispam(pieces_string[0], pieces_string[1]);
-	}
+	// if (!msg.content.startsWith(prefix) || msg.author.bot || msg.channel.type == 'dm') return;
 });
 
 
@@ -388,26 +412,26 @@ client.on('interactionCreate', async (interaction) => {
 		action = options.getString('action');
 		is_start = action === 'start'
 		is_start ? roletroll.start() : roletroll.stop();
-		text = is_start ? 'started' : 'stopped';
 
 		interaction.reply({
-			content: `${roletroll_cn} has been ${text}`,
-			ephemeral: true, // On the person running this command will see it
+			content: `${roletroll_cn} has been ${is_start ? 'started' : 'stopped'}`,
+			ephemeral: true, // Only the person running this command will see it
 		});
 	}
 
 	// modify-antispam
 	else if (commandName === modify_antispam_cn) {
 		attribute = options.getString('attribute');
-		value = options.getString('value');
+		
+		attribute = attribute === 'more' ? options.getString('attribute-continued') : attribute;
 
-		value = reformatAttributeValue(attribute, value);
+		value = reformatAttributeValue(attribute, options.getString('value'));
 
 		// Set the antispam variable to the modified Antispam object
 		antispam = modifyAntispam(attribute, value);
 		interaction.reply({
-			content: `The ${attribute} Antispam attribute has been changed to ${value}`,
-			ephemeral: true, // On the person running this command will see it
+			content: `The *${attribute}* attribute has been changed to: *${value}*`,
+			ephemeral: true, // Only the person running this command will see it
 		});
 	}
 });
