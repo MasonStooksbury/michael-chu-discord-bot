@@ -5,7 +5,8 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 // Dependencies
 const fs = require('fs');
 const cron = require('cron');
-const AntiSpam = require('discord-anti-spam');
+const AntiSpam = require('./discord-anti-spam.js');
+const slash_commands = require('./commands.js');
 
 // Invite Link (Admin permission): https://discord.com/api/oauth2/authorize?client_id=941547226986070057&permissions=8&scope=bot
 
@@ -33,7 +34,7 @@ const timeout_txt = './timeout.txt';
 // #####################################################################
 
 const TOKEN = process.env.TOKEN;
-const prefix = process.env.PREFIX;
+// const prefix = process.env.PREFIX;
 const server_id = process.env.SERVER_ID;
 const mute_rn = process.env.MUTE_RN;
 const admin_rn = process.env.ADMIN_RN;
@@ -41,9 +42,7 @@ let minimum_message_length = parseInt(process.env.MIN_MESSAGE_LENGTH);
 
 client.login(TOKEN);
 
-// Command name variables
-const modify_antispam_cn = 'modify-antispam';
-const roletroll_cn = 'roletroll';
+
 
 
 
@@ -51,8 +50,9 @@ const roletroll_cn = 'roletroll';
 client.on('ready', () => {
 	console.info(`Logged in as ${client.user.tag}!`);
 
-	// TODO: Get rid of this?
+	// Comment out this line to register slash commands with the application (this takes an hour to take effect so only do this after rigorous testing is complete)
 	const guild = client.guilds.cache.get(server_id);
+
 	let commands
 	if (guild) {
 		commands = guild.commands
@@ -60,91 +60,9 @@ client.on('ready', () => {
 		commands = client.application?.commands
 	}
 
-	// roletroll
-	commands?.create({
-		name: roletroll_cn,
-		description: `Starts and stops the ${roletroll_cn} Cron job`,
-		options: [
-			{
-				name: 'action',
-				description: 'Whether or not you want to start or stop the Cron job',
-				required: true,
-				type: 3, // STRING
-				choices: [
-					{name: 'Start', value: 'start'},
-					{name: 'Stop', value: 'stop'}
-				]
-			}
-		]
-	});
-	
-	// modify-antispam
-	commands?.create({
-		name: modify_antispam_cn,
-		description: 'Modify the antispam object',
-		options: [
-			{
-				name: 'attribute',
-				description: 'What part of the antispam object to modify',
-				required: true,
-				type: 3, // STRING
-				choices: [
-					{name: 'warnThreshold', value: 'warnThreshold'},
-					{name: 'muteThreshold', value: 'muteThreshold'},
-					{name: 'kickThreshold', value: 'kickThreshold'},
-					{name: 'banThreshold', value: 'banThreshold'},
-					{name: 'maxInterval', value: 'maxInterval'},
-					{name: 'maxDuplicatesInterval', value: 'maxDuplicatesInterval'},
-					{name: 'maxDuplicatesWarn', value: 'maxDuplicatesWarn'},
-					{name: 'maxDuplicatesKick', value: 'maxDuplicatesKick'},
-					{name: 'maxDuplicatesMute', value: 'maxDuplicatesMute'},
-					{name: 'maxDuplicatesBan', value: 'maxDuplicatesBan'},
-					{name: 'unMuteTime', value: 'unMuteTime'},
-					{name: 'modLogsChannelName', value: 'modLogsChannelName'},
-					{name: 'modLogsEnabled', value: 'modLogsEnabled'},
-					{name: 'modLogsMode', value: 'modLogsMode'},
-					{name: 'warnMessage', value: 'warnMessage'},
-					{name: 'kickMessage', value: 'kickMessage'},
-					{name: 'muteMessage', value: 'muteMessage'},
-					{name: 'banMessage', value: 'banMessage'},
-					{name: 'errorMessages', value: 'errorMessages'},
-					{name: 'kickErrorMessage', value: 'kickErrorMessage'},
-					{name: 'banErrorMessage', value: 'banErrorMessage'},
-					{name: 'muteErrorMessage', value: 'muteErrorMessage'},
-					{name: 'ignoredMembers', value: 'ignoredMembers'},
-					{name: 'ignoredRoles', value: 'ignoredRoles'},
-					{name: 'more...', value: 'more'}
-				]
-			},
-			{
-				name: 'attribute-continued',
-				description: 'What part of the antispam object to modify',
-				required: true,
-				type: 3, // STRING
-				choices: [
-					{name: 'Not needed', value: 'not_needed'},
-					{name: 'ignoredGuilds', value: 'ignoredGuilds'},
-					{name: 'ignoredChannels', value: 'ignoredChannels'},
-					{name: 'ignoredPermissions', value: 'ignoredPermissions'},
-					{name: 'ignoreBots', value: 'ignoreBots'},
-					{name: 'warnEnabled', value: 'warnEnabled'},
-					{name: 'kickEnabled', value: 'kickEnabled'},
-					{name: 'muteEnabled', value: 'muteEnabled'},
-					{name: 'banEnabled', value: 'banEnabled'},
-					{name: 'deleteMessagesAfterBanForPastDays', value: 'deleteMessagesAfterBanForPastDays'},
-					{name: 'verbose', value: 'verbose'},
-					{name: 'debug', value: 'debug'},
-					{name: 'removeMessages', value: 'removeMessages'},
-					{name: 'MultipleSanctions', value: 'MultipleSanctions'}
-				]
-			},
-			{
-				name: 'value',
-				description: 'What value to change the attribute to',
-				required: true,
-				type: 3 // STRING
-			}
-		]
+	// TODO put commands here
+	slash_commands.getCommands().forEach(command => {
+		commands?.create(command);
 	});
 });
 
@@ -243,7 +161,6 @@ function reformatAttributeValue(attribute, value) {
 			formatted_value = value === 'true' ? true : false;
 			break;
 	}
-	console.log(`formatted: ${formatted_value}`);
 	return formatted_value
 }
 
@@ -400,7 +317,7 @@ client.on('messageCreate', msg => {
 });
 
 
-
+// Slash commands
 client.on('interactionCreate', async (interaction) => {
 	if (!interaction.isCommand()) return;
 
@@ -408,29 +325,39 @@ client.on('interactionCreate', async (interaction) => {
 	const { commandName, options } = interaction;
 
 	// roletroll
-	if (commandName === roletroll_cn) {
+	if (commandName === 'roletroll') {
 		action = options.getString('action');
 		is_start = action === 'start'
 		is_start ? roletroll.start() : roletroll.stop();
 
 		interaction.reply({
-			content: `${roletroll_cn} has been ${is_start ? 'started' : 'stopped'}`,
+			content: `roletroll has been ${is_start ? 'started' : 'stopped'}`,
 			ephemeral: true, // Only the person running this command will see it
 		});
 	}
 
 	// modify-antispam
-	else if (commandName === modify_antispam_cn) {
+	else if (commandName === 'modify-antispam') {
 		attribute = options.getString('attribute');
-		
 		attribute = attribute === 'more' ? options.getString('attribute-continued') : attribute;
-
 		value = reformatAttributeValue(attribute, options.getString('value'));
 
 		// Set the antispam variable to the modified Antispam object
 		antispam = modifyAntispam(attribute, value);
 		interaction.reply({
 			content: `The *${attribute}* attribute has been changed to: *${value}*`,
+			ephemeral: true, // Only the person running this command will see it
+		});
+	}
+
+	// print-antispam-attribute
+	else if (commandName === 'print-antispam-attribute') {
+		attribute = options.getString('attribute');
+		attribute = attribute === 'more' ? options.getString('attribute-continued') : attribute;
+		value = antispam.getAttributeValue(attribute);
+		
+		interaction.reply({
+			content: `The *${attribute}* attribute is currently set to: *${value}*`,
 			ephemeral: true, // Only the person running this command will see it
 		});
 	}
@@ -448,4 +375,4 @@ client.on('interactionCreate', async (interaction) => {
 // Reset index.js for discord-anti-spam
 
 // Dependencies
-// discordjs cron dotenv discord-anti-spam
+// discord.js cron dotenv
