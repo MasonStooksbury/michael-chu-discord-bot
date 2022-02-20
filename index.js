@@ -8,34 +8,29 @@ const cron = require('cron');
 const AntiSpam = require('./discord-anti-spam.js');
 const slash_commands = require('./commands.js');
 
-// Invite Link (Admin permission): https://discord.com/api/oauth2/authorize?client_id=941547226986070057&permissions=8&scope=bot
-
-
-
-// Files
-const timeout_txt = './timeout.txt';
-
 
 
 // #####################################################################
 // ################ FUNCTIONS and GLOBAL VARIABLES #####################
 // #####################################################################
 
-const TOKEN = process.env.TOKEN;
 // const prefix = process.env.PREFIX;
+const TOKEN = process.env.TOKEN;
 const server_id = process.env.SERVER_ID;
 const mute_rn = process.env.MUTE_RN;
 const admin_rn = process.env.ADMIN_RN;
 const channels_to_watch = process.env.CHANNELS.split(' ');
+const minimum_message_length = parseInt(process.env.MIN_MESSAGE_LENGTH);
 
+// Files
+const timeout_txt = './timeout.txt';
 const unaccepted_words_txt = './unaccepted_words.txt';
-let minimum_message_length = parseInt(process.env.MIN_MESSAGE_LENGTH);
+
+
+
+
 
 client.login(TOKEN);
-
-
-
-
 
 // When the bot connects
 client.on('ready', () => {
