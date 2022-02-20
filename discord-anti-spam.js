@@ -1,7 +1,5 @@
 const Discord = require('discord.js');
 const { EventEmitter } = require('events');
-const index_thing = require('./index');
-
 
 /**
  * @callback IgnoreMemberFunction
@@ -132,9 +130,9 @@ class AntiSpamClient extends EventEmitter {
 	/**
      * @param {AntiSpamClientOptions} options The options for this AntiSpam client instance
      */
-	constructor (options) {
+	constructor (options, customMuteUser) {
 		super()
-		this.index = index_thing;
+		this.customMuteUser = customMuteUser;
 		/**
 		 * The options for this AntiSpam client instance
 		 * @type {AntiSpamClientOptions}
@@ -353,39 +351,40 @@ class AntiSpamClient extends EventEmitter {
 		if (this.options.removeMessages && spamMessages) {
 			this.clearSpamMessages(spamMessages, message.client)
 		}
-		// this.cache.messages = this.cache.messages.filter((u) => u.authorID !== message.author.id)
-		// const userCanBeMuted = message.guild.me.permissions.has('MODERATE_MEMBERS') && (message.guild.me.roles.highest.position > message.member.roles.highest.position && message.member.id !== message.guild.ownerId)
-		// if (!userCanBeMuted) {
-		// 	if (this.options.verbose) {
-		// 		console.log(`DAntiSpam (kickUser#userNotMutable): ${message.author.tag} (ID: ${message.author.id}) could not be muted, improper permissions.`)
-		// 	}
-		// 	if (this.options.errorMessages) {
-		// 		await message.channel
-		// 			.send(this.format(this.options.muteErrorMessage, message))
-		// 			.catch((e) => {
-		// 				if (this.options.verbose) {
-		// 					console.log(`DAntiSpam (muteUser#sendMissingPermMessage): ${e.message}`)
-		// 				}
-		// 			})
-		// 	}
-		// 	return false
-		// }
-		// await message.member.timeout(this.options.unMuteTime, 'Spamming')
-		// if (this.options.muteMessage) {
-		// 	await message.channel.send(this.format(this.options.muteMessage, message)).catch(e => {
-		// 		if (this.options.verbose) {
-		// 			console.error(`DAntiSpam (muteUser#sendSuccessMessage): ${e.message}`)
-		// 		}
-		// 	})
-		// }
-		// if (this.options.modLogsEnabled) {
-		// 	this.log(message, `muted`, message.client)
-		// }
+		this.cache.messages = this.cache.messages.filter((u) => u.authorID !== message.author.id)
+		const userCanBeMuted = message.guild.me.permissions.has('MODERATE_MEMBERS') && (message.guild.me.roles.highest.position > message.member.roles.highest.position && message.member.id !== message.guild.ownerId)
+		if (!userCanBeMuted) {
+			if (this.options.verbose) {
+				console.log(`DAntiSpam (kickUser#userNotMutable): ${message.author.tag} (ID: ${message.author.id}) could not be muted, improper permissions.`)
+			}
+			if (this.options.errorMessages) {
+				await message.channel
+					.send(this.format(this.options.muteErrorMessage, message))
+					.catch((e) => {
+						if (this.options.verbose) {
+							console.log(`DAntiSpam (muteUser#sendMissingPermMessage): ${e.message}`)
+						}
+					})
+			}
+			return false
+		}
+		await message.member.timeout(this.options.unMuteTime, 'Spamming')
+		if (this.options.muteMessage) {
+			await message.channel.send(this.format(this.options.muteMessage, message)).catch(e => {
+				if (this.options.verbose) {
+					console.error(`DAntiSpam (muteUser#sendSuccessMessage): ${e.message}`)
+				}
+			})
+		}
+		if (this.options.modLogsEnabled) {
+			this.log(message, `muted`, message.client)
+		}
+		
 		// Old method
 		// this.emit('muteAdd', member)
 
 		// New method
-		this.index.customMuteUser(message);
+		this.customMuteUser(message, message.guild);
 
 		return true
 	}

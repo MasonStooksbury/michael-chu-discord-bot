@@ -1,3 +1,8 @@
+require('dotenv').config();
+
+const admin_rn = process.env.ADMIN_RN;
+
+
 const page_1_choices = [
     {name: 'warnThreshold', value: 'warnThreshold'},
     {name: 'muteThreshold', value: 'muteThreshold'},
@@ -49,6 +54,7 @@ function getCommands() {
         {
             name: 'roletroll',
             description: `Starts and stops the roletroll Cron job`,
+            permission: admin_rn,
             options: [
                 {
                     name: 'action',

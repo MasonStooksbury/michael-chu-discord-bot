@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, Collection, Intents } = require('discord.js');
+const { Client, Intents, MessageEmbed } = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 // Dependencies
@@ -10,22 +10,10 @@ const slash_commands = require('./commands.js');
 
 // Invite Link (Admin permission): https://discord.com/api/oauth2/authorize?client_id=941547226986070057&permissions=8&scope=bot
 
-// TODO: Delete this
-// client.commands = new Collection();
-// const command_files = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-
-// for (const file of command_files) {
-// 	const command = require(`./commands/${file}`);
-// 	// Set a new item in the Collection
-// 	// With the key as the command name and the value as the exported module
-// 	client.commands.set(command.data.name, command);
-// }
 
 
 // Files
 const timeout_txt = './timeout.txt';
-
-
 
 
 
@@ -71,10 +59,10 @@ client.on('ready', () => {
 
 
 
-// Message a specific user. Mainly used in the Major Events logs
+// Modify the AntiSpam object by changing the requested attribute's value
 function modifyAntispam(attribute='~~~', value='~~~') {
+	// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
 	antispam_object = {
-		// All of these options are found under the AntiSpamClientOptions section here: https://discord-anti-spam.js.org/global.html
 		warnThreshold: 3, // Amount of messages sent in a row that will cause a warning.
 		muteThreshold: 3, // Amount of messages sent in a row that will cause a mute
 		kickThreshold: 5, // Amount of messages sent in a row that will cause a kick.
@@ -114,6 +102,7 @@ function modifyAntispam(attribute='~~~', value='~~~') {
 		MultipleSanctions: false, // Whether to run sanctions multiple times
 	}
 
+	// If this isn't the initialization call, set the value of the attribute to whatever is requested
 	if (attribute !== '~~~' && value !== '~~~') {
 		for (const k in antispam_object) {
 			if (k == attribute) {
@@ -122,9 +111,11 @@ function modifyAntispam(attribute='~~~', value='~~~') {
 		}
 	}
 
-	return new AntiSpam(antispam_object);
+	// Return a new AntiSpam object with the ability to call the customMuteUser function
+	return new AntiSpam(antispam_object, customMuteUser);
 }
 
+// Attributes get returned from the slash command as strings. We need to make sure they are reformatted to what discord-anti-spam can understand
 function reformatAttributeValue(attribute, value) {
 	let formatted_value = attribute;
 	switch (attribute) {
@@ -167,6 +158,7 @@ function reformatAttributeValue(attribute, value) {
 	return formatted_value
 }
 
+// A custom function that will "mute" a user by simply assigning them a role and then logging their ID to a file
 function customMuteUser(msg, guild) {
 	// First, assign them the mute role if they don't already have it
 	if (!msg.member.roles.cache.some(role => role.name === mute_rn)) {
@@ -324,7 +316,7 @@ client.on('messageCreate', msg => {
 	// Initialize the guild variable so that we can get helpful information later
 	const guild = client.guilds.cache.get(server_id);
 
-	// If a non-admin user sends a message that is 10 characters or less, mute them for 10 minutes
+	// If a non-admin user sends a message that is 10 characters or less in a watched channel, mute them
 	if (msg.content.length <= minimum_message_length && channels_to_watch.includes(msg.channel.id) && !is_admin) {
 		customMuteUser(msg, guild);
 	}
@@ -359,6 +351,24 @@ client.on('interactionCreate', async (interaction) => {
 
 	// The names of these are inherent to the interaction object, do not try to change them
 	const { commandName, options } = interaction;
+
+	is_admin = interaction.member.roles.cache.some(role => role.name === admin_rn)
+
+	// If the user is not an admin, tell them that and do nothing
+	if (!is_admin) {
+		embed = new MessageEmbed()
+                .setColor('RED')
+                .setTitle('Incorrect Permissions')
+				.setDescription(`You do not have the required permissions to run the ${commandName} command`)
+                .setTimestamp()
+
+		return interaction.reply({
+			embeds: [embed],
+			ephemeral: true, // Only the person running this command will see it
+		});
+	}
+
+	// Must be an admin to perform any of the commands below
 
 	// roletroll
 	if (commandName === 'roletroll') {
@@ -399,8 +409,6 @@ client.on('interactionCreate', async (interaction) => {
 	}
 });
 
-// Export the function names so we can actually access them (and also so that only these are exposed)
-module.exports = { customMuteUser };
 
 
 
@@ -408,9 +416,6 @@ module.exports = { customMuteUser };
 // #####################################################################
 // ############################# NOTES #################################
 // #####################################################################
-
-// TODOS
-// Reset index.js for discord-anti-spam
 
 // Dependencies
 // discord.js cron dotenv
