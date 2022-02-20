@@ -38,6 +38,9 @@ const TOKEN = process.env.TOKEN;
 const server_id = process.env.SERVER_ID;
 const mute_rn = process.env.MUTE_RN;
 const admin_rn = process.env.ADMIN_RN;
+const channels_to_watch = process.env.CHANNELS.split(' ');
+
+const unaccepted_words_txt = './unaccepted_words.txt';
 let minimum_message_length = parseInt(process.env.MIN_MESSAGE_LENGTH);
 
 client.login(TOKEN);
@@ -164,6 +167,48 @@ function reformatAttributeValue(attribute, value) {
 	return formatted_value
 }
 
+function customMuteUser(msg, guild) {
+	// First, assign them the mute role if they don't already have it
+	if (!msg.member.roles.cache.some(role => role.name === mute_rn)) {
+		// Grab the actual role object
+		var role = guild.roles.cache.find(role => role.name === mute_rn);
+		// Assign the role object to our person
+		msg.member.roles.add(role);
+		msg.channel.send(`<@${msg.author.id}> has been muted for sending messages that are ${minimum_message_length} characters or less`);
+		msg.delete().catch(console.error);
+	}
+	// If they already have it, do nothing but delete their message
+	else {
+		msg.delete().catch(console.error);
+		return;
+	}
+
+	// Second, add them to the mute list for the roletroll to watch
+	let date = new Date(Date.now());
+
+	// Set the time based on input
+	//TODO Set this based on what michael wants to do
+	date.setTime(date.getTime() + 60000);
+
+	date_thing = date.toLocaleDateString().charAt(0) === '0' ? date.toLocaleDateString().slice(1) : date.toLocaleDateString();
+
+	// Here is why we are doing streams rather than appendFile or appendFileSync:
+	// https://stackoverflow.com/questions/3459476/how-to-append-to-a-file-in-node/43370201#43370201
+
+	// Write it to the file
+	// If they are already in the list, then we don't need to add it twice
+	fs.readFile(timeout_txt, 'utf8', function(err, data) {
+		if (err) throw err;
+		if (data.includes(msg.author.id)) {
+			return;
+		}
+
+		// Write it to the file
+		var stream = fs.createWriteStream(timeout_txt, { flags: 'a' });
+		stream.write(`${msg.author.id} ${date_thing} ${date.toLocaleTimeString()}\n`);
+	});
+}
+
 // Setup the roletroll cron job to run: 00 * * * * *
 // This runs every minute of every day of every day in the week of every week of every month of the year
 let roletroll = new cron.CronJob('00 * * * * *', () => {
@@ -274,42 +319,33 @@ client.on('messageCreate', msg => {
 	antispam.message(msg);
 	
 	// Is the user who sent this message an Admin?
-	const isAdmin = msg.member.roles.cache.some(role => role.name === admin_rn);
+	const is_admin = msg.member.roles.cache.some(role => role.name === admin_rn);
 
 	// Initialize the guild variable so that we can get helpful information later
 	const guild = client.guilds.cache.get(server_id);
 
-	// If a user sends a message that is 10 characters or less, mute them for 10 minutes
-	if (msg.content.length <= minimum_message_length && !isAdmin) {
-		// First, assign them the mute role if they don't already have it
-		if (!msg.member.roles.cache.some(role => role.name === mute_rn)) {
-			// Grab the actual role object
-			var role = guild.roles.cache.find(role => role.name === mute_rn);
-			// Assign the role object to our person
-			msg.member.roles.add(role);
-			msg.channel.send(`<@${msg.author.id}> has been muted for sending messages that are ${minimum_message_length} characters or less`);
-			msg.delete().catch(console.error);
-		} else {
-			msg.delete().catch(console.error);
-			return;
-		}
-
-		// Second, add them to the mute list for the roletroll to watch
-		let date = new Date(Date.now());
-
-		// Set the time based on input
-		//TODO Set this based on what michael wants to do
-		date.setTime(date.getTime() + 60000);
-
-		date_thing = date.toLocaleDateString().charAt(0) === '0' ? date.toLocaleDateString().slice(1) : date.toLocaleDateString();
-
-		// Here is why we are doing streams rather than appendFile or appendFileSync:
-		// https://stackoverflow.com/questions/3459476/how-to-append-to-a-file-in-node/43370201#43370201
-
-		// Write it to the file
-		var stream = fs.createWriteStream(timeout_txt, { flags: 'a' });
-		stream.write(`${msg.author.id} ${date_thing} ${date.toLocaleTimeString()}\n`);
+	// If a non-admin user sends a message that is 10 characters or less, mute them for 10 minutes
+	if (msg.content.length <= minimum_message_length && channels_to_watch.includes(msg.channel.id) && !is_admin) {
+		customMuteUser(msg, guild);
 	}
+
+	// Delete messages with certain words: Open our text file and look for our ID
+	fs.readFile(unaccepted_words_txt, 'utf8', function(err, data) {
+		if (err) throw err;
+
+		// Put each line as its own element in an array. Account for different line endings
+		data = data.split(/\r?\n/);
+
+		data.forEach(word => {
+			// If message contains an unaccepted word and you are not an Admin, delete the message
+			if (!msg.author.bot && msg.channel.type !== 'dm' && msg.content.toLowerCase().includes(word) && !is_admin) {
+				msg.delete().catch(console.error);
+			}
+			// else if (!msg.author.bot && msg.channel.type !== 'dm' && msg.content.toLowerCase().includes(word)){
+			// 	msg.author.send("Ayyyy, let's not use no-no words, m'kay?").catch(() => msg.reply(`I wasn't able to message you privately so I have to tell you this publically: Let's not use no-no words, m'kay?`));
+			// }
+		});
+	});
 
 	// ENABLE THIS IF YOU ADD CUSTOM COMMANDS
 	// If this message isn't a command, or the user is a bot, or this is a DM: leave
@@ -363,6 +399,8 @@ client.on('interactionCreate', async (interaction) => {
 	}
 });
 
+// Export the function names so we can actually access them (and also so that only these are exposed)
+module.exports = { customMuteUser };
 
 
 

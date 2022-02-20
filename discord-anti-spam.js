@@ -1,5 +1,7 @@
-const Discord = require('discord.js')
-const { EventEmitter } = require('events')
+const Discord = require('discord.js');
+const { EventEmitter } = require('events');
+const index_thing = require('./index');
+
 
 /**
  * @callback IgnoreMemberFunction
@@ -132,6 +134,7 @@ class AntiSpamClient extends EventEmitter {
      */
 	constructor (options) {
 		super()
+		this.index = index_thing;
 		/**
 		 * The options for this AntiSpam client instance
 		 * @type {AntiSpamClientOptions}
@@ -347,11 +350,9 @@ class AntiSpamClient extends EventEmitter {
 	 * @returns {Promise<boolean>} Whether the member could be muted.
 	 */
 	async muteUser (message, member, spamMessages) {
-		// TODO: Remove this
-		console.log(`unmute time: ${this.options.unMuteTime}`);
-		// if (this.options.removeMessages && spamMessages) {
-		// 	this.clearSpamMessages(spamMessages, message.client)
-		// }
+		if (this.options.removeMessages && spamMessages) {
+			this.clearSpamMessages(spamMessages, message.client)
+		}
 		// this.cache.messages = this.cache.messages.filter((u) => u.authorID !== message.author.id)
 		// const userCanBeMuted = message.guild.me.permissions.has('MODERATE_MEMBERS') && (message.guild.me.roles.highest.position > message.member.roles.highest.position && message.member.id !== message.guild.ownerId)
 		// if (!userCanBeMuted) {
@@ -380,8 +381,13 @@ class AntiSpamClient extends EventEmitter {
 		// if (this.options.modLogsEnabled) {
 		// 	this.log(message, `muted`, message.client)
 		// }
+		// Old method
 		// this.emit('muteAdd', member)
-		// return true
+
+		// New method
+		this.index.customMuteUser(message);
+
+		return true
 	}
 
 	/**
