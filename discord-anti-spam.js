@@ -351,31 +351,31 @@ class AntiSpamClient extends EventEmitter {
 		if (this.options.removeMessages && spamMessages) {
 			this.clearSpamMessages(spamMessages, message.client)
 		}
-		this.cache.messages = this.cache.messages.filter((u) => u.authorID !== message.author.id)
-		const userCanBeMuted = message.guild.me.permissions.has('MODERATE_MEMBERS') && (message.guild.me.roles.highest.position > message.member.roles.highest.position && message.member.id !== message.guild.ownerId)
-		if (!userCanBeMuted) {
-			if (this.options.verbose) {
-				console.log(`DAntiSpam (kickUser#userNotMutable): ${message.author.tag} (ID: ${message.author.id}) could not be muted, improper permissions.`)
-			}
-			if (this.options.errorMessages) {
-				await message.channel
-					.send(this.format(this.options.muteErrorMessage, message))
-					.catch((e) => {
-						if (this.options.verbose) {
-							console.log(`DAntiSpam (muteUser#sendMissingPermMessage): ${e.message}`)
-						}
-					})
-			}
-			return false
-		}
-		await message.member.timeout(this.options.unMuteTime, 'Spamming')
-		if (this.options.muteMessage) {
-			await message.channel.send(this.format(this.options.muteMessage, message)).catch(e => {
-				if (this.options.verbose) {
-					console.error(`DAntiSpam (muteUser#sendSuccessMessage): ${e.message}`)
-				}
-			})
-		}
+		// this.cache.messages = this.cache.messages.filter((u) => u.authorID !== message.author.id)
+		// const userCanBeMuted = message.guild.me.permissions.has('MODERATE_MEMBERS') && (message.guild.me.roles.highest.position > message.member.roles.highest.position && message.member.id !== message.guild.ownerId)
+		// if (!userCanBeMuted) {
+		// 	if (this.options.verbose) {
+		// 		console.log(`DAntiSpam (kickUser#userNotMutable): ${message.author.tag} (ID: ${message.author.id}) could not be muted, improper permissions.`)
+		// 	}
+		// 	if (this.options.errorMessages) {
+		// 		await message.channel
+		// 			.send(this.format(this.options.muteErrorMessage, message))
+		// 			.catch((e) => {
+		// 				if (this.options.verbose) {
+		// 					console.log(`DAntiSpam (muteUser#sendMissingPermMessage): ${e.message}`)
+		// 				}
+		// 			})
+		// 	}
+		// 	return false
+		// }
+		// await message.member.timeout(this.options.unMuteTime, 'Spamming')
+		// if (this.options.muteMessage) {
+		// 	await message.channel.send(this.format(this.options.muteMessage, message)).catch(e => {
+		// 		if (this.options.verbose) {
+		// 			console.error(`DAntiSpam (muteUser#sendSuccessMessage): ${e.message}`)
+		// 		}
+		// 	})
+		// }
 		if (this.options.modLogsEnabled) {
 			this.log(message, `muted`, message.client)
 		}
@@ -384,7 +384,7 @@ class AntiSpamClient extends EventEmitter {
 		// this.emit('muteAdd', member)
 
 		// New method
-		this.customMuteUser(message, message.guild);
+		this.customMuteUser(message, message.guild, `<@${message.author.id}> has been muted for spamming`);
 
 		return true
 	}

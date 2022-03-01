@@ -20,7 +20,7 @@ const server_id = process.env.SERVER_ID;
 const mute_rn = process.env.MUTE_RN;
 const admin_rn = process.env.ADMIN_RN;
 const channels_to_watch = process.env.CHANNELS.split(' ');
-const minimum_message_length = parseInt(process.env.MIN_MESSAGE_LENGTH);
+const minimum_message_length = 5;
 
 // Files
 const timeout_txt = './timeout.txt';
@@ -154,14 +154,14 @@ function reformatAttributeValue(attribute, value) {
 }
 
 // A custom function that will "mute" a user by simply assigning them a role and then logging their ID to a file
-function customMuteUser(msg, guild) {
+function customMuteUser(msg, guild, mute_message) {
 	// First, assign them the mute role if they don't already have it
 	if (!msg.member.roles.cache.some(role => role.name === mute_rn)) {
 		// Grab the actual role object
 		var role = guild.roles.cache.find(role => role.name === mute_rn);
 		// Assign the role object to our person
 		msg.member.roles.add(role);
-		msg.channel.send(`<@${msg.author.id}> has been muted for sending messages that are ${minimum_message_length} characters or less`);
+		msg.channel.send(mute_message);
 		msg.delete().catch(console.error);
 	}
 	// If they already have it, do nothing but delete their message
@@ -307,14 +307,19 @@ client.on('messageCreate', msg => {
 	
 	// Is the user who sent this message an Admin?
 	const is_admin = msg.member.roles.cache.some(role => role.name === admin_rn);
+	const is_muted = msg.member.roles.cache.some(role => role.name === mute_rn);
 
 	// Initialize the guild variable so that we can get helpful information later
-	const guild = client.guilds.cache.get(server_id);
+	// const guild = client.guilds.cache.get(server_id);
+
+	if (is_muted) {
+		msg.delete().catch(console.error);
+	}
 
 	// If a non-admin user sends a message that is 10 characters or less in a watched channel, mute them
-	if (msg.content.length <= minimum_message_length && channels_to_watch.includes(msg.channel.id) && !is_admin) {
-		customMuteUser(msg, guild);
-	}
+	// if (msg.content.length <= minimum_message_length && channels_to_watch.includes(msg.channel.id) && !is_admin) {
+	// 	customMuteUser(msg, guild, `<@${msg.author.id}> has been muted for sending messages that are ${minimum_message_length} characters or less`);
+	// }
 
 	// Delete messages with certain words: Open our text file and look for our ID
 	fs.readFile(unaccepted_words_txt, 'utf8', function(err, data) {
