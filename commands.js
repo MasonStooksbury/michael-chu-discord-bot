@@ -4,6 +4,7 @@ const admin_rn = process.env.ADMIN_RN;
 
 
 const page_1_choices = [
+    {name: 'more...', value: 'more'},
     {name: 'warnThreshold', value: 'warnThreshold'},
     {name: 'muteThreshold', value: 'muteThreshold'},
     {name: 'kickThreshold', value: 'kickThreshold'},
@@ -27,8 +28,7 @@ const page_1_choices = [
     {name: 'banErrorMessage', value: 'banErrorMessage'},
     {name: 'muteErrorMessage', value: 'muteErrorMessage'},
     {name: 'ignoredMembers', value: 'ignoredMembers'},
-    {name: 'ignoredRoles', value: 'ignoredRoles'},
-    {name: 'more...', value: 'more'}
+    {name: 'ignoredRoles', value: 'ignoredRoles'}
 ];
 const page_2_choices = [
     {name: 'Not needed', value: 'not_needed'},
