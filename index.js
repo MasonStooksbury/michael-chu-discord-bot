@@ -37,7 +37,7 @@ client.on('ready', () => {
 	console.info(`Logged in as ${client.user.tag}!`);
 
 	// Comment out this line to register slash commands with the application (this takes an hour to take effect so only do this after rigorous testing is complete)
-	const guild = client.guilds.cache.get(server_id);
+	// const guild = client.guilds.cache.get(server_id);
 
 	let commands
 	if (guild) {
