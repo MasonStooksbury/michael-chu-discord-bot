@@ -19,8 +19,8 @@ const TOKEN = process.env.TOKEN;
 const server_id = process.env.SERVER_ID;
 const mute_rn = process.env.MUTE_RN;
 const admin_rn = process.env.ADMIN_RN;
-const channels_to_watch = process.env.CHANNELS.split(' ');
-const minimum_message_length = 5;
+// const channels_to_watch = process.env.CHANNELS.split(' ');
+// const minimum_message_length = 5;
 
 // Files
 const timeout_txt = './timeout.txt';
