@@ -39,12 +39,13 @@ client.on('ready', () => {
 	// Comment out this line to register slash commands with the application (this takes an hour to take effect so only do this after rigorous testing is complete)
 	// const guild = client.guilds.cache.get(server_id);
 
-	let commands
-	if (guild) {
-		commands = guild.commands
-	} else {
-		commands = client.application?.commands
-	}
+	// let commands
+	// if (guild) {
+	// 	commands = guild.commands
+	// } else {
+	// 	commands = client.application?.commands
+	// }
+	let commands = client.application?.commands
 
 	// TODO put commands here
 	slash_commands.getCommands().forEach(command => {
