@@ -17,6 +17,7 @@ const slash_commands = require('./commands.js');
 // const prefix = process.env.PREFIX;
 const TOKEN = process.env.TOKEN;
 const server_id = process.env.SERVER_ID;
+const client_id = process.env.CLIENT_ID;
 const mute_rn = process.env.MUTE_RN;
 const admin_rn = process.env.ADMIN_RN;
 // const channels_to_watch = process.env.CHANNELS.split(' ');
@@ -51,6 +52,21 @@ client.on('ready', () => {
 	slash_commands.getCommands().forEach(command => {
 		commands?.create(command);
 	});
+
+	(async () => {
+		try {
+			console.log('Started refreshing application (/) commands.');
+	
+			await rest.put(
+				Routes.applicationGuildCommands(client_id, server_id),
+				{ body: commands },
+			);
+	
+			console.log('Successfully reloaded application (/) commands.');
+		} catch (error) {
+			console.error(error);
+		}
+	})();
 });
 
 
