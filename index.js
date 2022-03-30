@@ -7,6 +7,8 @@ const fs = require('fs');
 const cron = require('cron');
 const AntiSpam = require('./discord-anti-spam.js');
 const slash_commands = require('./commands.js');
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
 
 
 
@@ -46,12 +48,16 @@ client.on('ready', () => {
 	// } else {
 	// 	commands = client.application?.commands
 	// }
-	let commands = client.application?.commands
+	// let commands = client.application?.commands
 
 	// TODO put commands here
-	slash_commands.getCommands().forEach(command => {
-		commands?.create(command);
-	});
+	// slash_commands.getCommands().forEach(command => {
+	// 	commands?.create(command);
+	// });
+
+	const commands = slash_commands.getCommands();
+
+	const rest = new REST({ version: '9' }).setToken(TOKEN);
 
 	(async () => {
 		try {
